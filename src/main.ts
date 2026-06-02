@@ -116,7 +116,7 @@ const METER_CLIP_LINEAR = dbToLinear(METER_CLIP_DB);
 const METER_RENDER_WIDTH_SCALE = 0.95;
 const METER_REFRESH_OPTIONS = [30, 50, 60];
 const NANO_HEARTBEAT_INTERVAL_MS = 60 * 1000;
-const NANO_SILENCE_BEFORE_PING_MS = 5 * 60 * 1000;
+const NANO_SILENCE_BEFORE_PING_MS = 10 * 60 * 1000;
 const NANO_HEARTBEAT_RESPONSE_MS = 7000;
 const NANO_HEARTBEAT_MAX_MISSES = 2;
 
@@ -732,7 +732,7 @@ async function pingNano() {
   if (Date.now() - state.lastNanoSeenAt < NANO_SILENCE_BEFORE_PING_MS) return;
 
   const sentAt = Date.now();
-  appendLog("Nano silent for 5 minutes; checking connection");
+  appendLog("Nano silent for 10 minutes; checking connection");
 
   try {
     await requestDeviceProfileState({ quiet: true });
