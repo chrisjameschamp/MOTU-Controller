@@ -1,14 +1,23 @@
 <h2 align="center">MOTU Controller</h2>
 
 <p align="center">
-    A macOS menu bar controller for a MOTU 828es audio interface, designed to work with a Nano-D++ MIDI controller running compatible firmware.
+A macOS menu bar controller for a MOTU 828es audio interface, designed to work with a Nano-D++ MIDI controller running compatible firmware.
+</p>
 
-    The app lets the Nano-D++ act as a hardware volume/profile controller for MOTU mix channels. It can create profiles from MOTU tracks, control mono/stereo/multichannel outputs, show live level meters, and sync the active profile and fader position between the app, the MOTU, and the device.
+<p align="center">
+The app lets the Nano-D++ act as a hardware volume/profile controller for MOTU mix channels. It can create profiles from MOTU tracks, control mono/stereo/multichannel outputs, show live level meters, and sync the active profile and fader position between the app, the MOTU, and the device.
 </p>
 <div align="center">
 
-    ![GitHub documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg?style=flat-square)
-    ![GitHub license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
+![GitHub documentation](https://img.shields.io/badge/documentation-yes-brightgreen.svg?style=flat-square)
+![GitHub issues](https://img.shields.io/github/issues/chrisjameschamp/MOTU-Controller?style=flat-square)
+![macOS](https://img.shields.io/badge/platform-macOS-lightgrey?style=flat-square&logo=apple)
+![Tauri](https://img.shields.io/badge/built%20with-Tauri-24C8DB?style=flat-square&logo=tauri&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Rust](https://img.shields.io/badge/Rust-000000?style=flat-square&logo=rust&logoColor=white)
+![GitHub license](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)
+![GitHub release](https://img.shields.io/github/v/release/chrisjameschamp/MOTU-Controller?style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/chrisjameschamp/MOTU-Controller?style=flat-square)
 
 </div>
 <div align="center">
