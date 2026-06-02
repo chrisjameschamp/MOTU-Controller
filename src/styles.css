@@ -1,0 +1,1099 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+:root {
+  --motu-blue: #0f71bc;
+  --motu-blue-bright: #2196f3;
+  --motu-blue-glow: rgba(33, 150, 243, 0.4);
+  --surface-0: #0d0f12;
+  --surface-1: #16191d;
+  --surface-2: #1c2026;
+  --surface-3: #232830;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: #e8eaed;
+  --text-secondary: #9aa0a6;
+  --text-tertiary: #6b7280;
+  --window-radius: 14px;
+  --window-inset: 2px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text-primary);
+  background: transparent;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01", "ss03";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+  border-radius: calc(var(--window-radius) + var(--window-inset));
+}
+
+body {
+  margin: 0;
+  min-width: 404px;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  appearance: none;
+  min-height: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+input,
+select {
+  min-width: 0;
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  outline: 0;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+input:focus,
+select:focus {
+  border-color: rgba(33, 150, 243, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.appStage {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--window-inset);
+  background: transparent;
+  border-radius: calc(var(--window-radius) + var(--window-inset));
+  overflow: hidden;
+}
+
+.menuPanel {
+  width: 400px;
+  max-width: calc(100vw - (var(--window-inset) * 2));
+  max-height: calc(100vh - (var(--window-inset) * 2));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #f4f4f5;
+  border: 0;
+  border-radius: var(--window-radius);
+  background: rgba(22, 25, 29, 0.92);
+  background-clip: padding-box;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(24px);
+  clip-path: inset(0 round var(--window-radius));
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.brandBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brandBlock img {
+  width: auto;
+  height: 20px;
+  display: block;
+}
+
+.brandBlock span {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.brandBlock strong {
+  color: #d4d4d8;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.settingsButton {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: -4px;
+  padding: 4px;
+  color: #71717a;
+  border-radius: 4px;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.settingsButton:hover {
+  color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.settingsButton.active {
+  color: #e4e4e7;
+  background: rgba(33, 150, 243, 0.14);
+}
+
+.settingsButton svg,
+.addProfileButton svg,
+.dragGrip svg,
+.deleteProfileButton svg,
+.chevron svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.connectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 0 0 auto;
+  padding: 12px 16px;
+}
+
+.deviceLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.deviceIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.deviceIdentity strong {
+  display: block;
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.deviceIdentity small {
+  display: block;
+  margin-top: 3px;
+  color: #71717a;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.pulseDot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #52525b;
+}
+
+.pulseDot.online {
+  background: var(--motu-blue-bright);
+}
+
+.pulseDot.online::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: rgba(33, 150, 243, 0.3);
+  animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  z-index: -1;
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+.ipInput {
+  width: 118px;
+  height: 24px;
+  padding: 0 7px;
+  color: #a1a1aa;
+  font: 500 11px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-align: right;
+}
+
+.nanoStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.connectedText {
+  padding: 0;
+  color: #22c55e;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.nanoStatus span {
+  color: #52525b;
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.motuControls,
+.nanoControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.portSelect {
+  width: 118px;
+  height: 24px;
+  padding: 0 6px;
+  color: #a1a1aa;
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+#connect,
+#connectMotu,
+.builder button,
+.inlineTools button {
+  height: 24px;
+  padding: 0 9px;
+  color: #d4d4d8;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 24px;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+#connect:hover,
+#connectMotu:hover,
+.builder button:hover,
+.inlineTools button:hover {
+  color: #f4f4f5;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nanoStatus #connect.connectedText {
+  height: auto;
+  padding: 0;
+  color: #22c55e;
+  border-radius: 0;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.nanoStatus #connect.connectedText:hover {
+  color: #22c55e;
+  background: transparent;
+}
+
+.divider {
+  height: 1px;
+  flex: 0 0 auto;
+  margin: 0 16px;
+  background: var(--border-subtle);
+}
+
+.labelTracked {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.profileSection {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+}
+
+.profileListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+
+.profileListHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.countText {
+  color: #52525b;
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.addProfileButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 9px;
+  color: #a1a1aa;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.addProfileButton:hover {
+  color: #f4f4f5;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
+.addProfileButton svg {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
+.addProfileButton span {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.settingsPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.settingsRow {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.settingsRow strong {
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.settingsSelect {
+  height: 24px;
+  min-width: 86px;
+  padding: 0 24px 0 8px;
+  color: #d4d4d8;
+  border-color: rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  background-color: rgba(0, 0, 0, 0.45);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.switchToggle {
+  position: relative;
+  width: 34px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.switchToggle input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.switchToggle span {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.switchToggle span::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #a1a1aa;
+  transition: transform 140ms ease, background 140ms ease;
+}
+
+.switchToggle input:checked + span {
+  border-color: rgba(33, 150, 243, 0.45);
+  background: rgba(15, 113, 188, 0.42);
+}
+
+.switchToggle input:checked + span::before {
+  transform: translateX(16px);
+  background: #e8eaed;
+}
+
+.quitButton {
+  height: 30px;
+  padding: 0 12px;
+  color: #d4d4d8;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.quitButton:hover {
+  color: #f4f4f5;
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.profileList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.profileRow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.profileRow::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: -1px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+  transition: background 140ms ease, box-shadow 140ms ease;
+}
+
+.profileRow.selected {
+  border-color: rgba(33, 150, 243, 0.36);
+  background: linear-gradient(90deg, rgba(33, 150, 243, 0.13), rgba(255, 255, 255, 0.025) 42%);
+  box-shadow: inset 0 0 0 1px rgba(33, 150, 243, 0.08);
+}
+
+.profileRow.selected::before {
+  background: var(--motu-blue-bright);
+  box-shadow: 0 0 12px rgba(33, 150, 243, 0.55);
+}
+
+.profileRow.selected .profileNameText,
+.profileRow.selected .profileNameInput {
+  color: #f8fafc;
+}
+
+.profileRow.selected .profileDbReadout > span {
+  color: #8fcdf7;
+}
+
+.draggingProfile {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.profileRow:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.profileRow.selected:hover {
+  border-color: rgba(33, 150, 243, 0.46);
+  background: linear-gradient(90deg, rgba(33, 150, 243, 0.16), rgba(255, 255, 255, 0.04) 42%);
+}
+
+.profileRow.dragShifted {
+  will-change: transform;
+  transition: transform 170ms cubic-bezier(0.16, 1, 0.3, 1), background 140ms ease, border-color 140ms ease;
+}
+
+.profileRow.dragSource {
+  z-index: 20;
+  border-color: rgba(33, 150, 243, 0.38);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(33, 150, 243, 0.22);
+  transition: none;
+}
+
+.profileRow.dragSource .dragGrip {
+  opacity: 1;
+  color: #d4d4d8;
+}
+
+.profileStrip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+}
+
+.profileNameGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dragGrip {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  padding: 0;
+  color: #52525b;
+  cursor: grab;
+  opacity: 0;
+  touch-action: none;
+  transition: color 140ms ease, opacity 140ms ease;
+}
+
+.profileRow:hover .dragGrip,
+.dragGrip.visible {
+  opacity: 1;
+}
+
+.dragGrip:hover {
+  color: #d4d4d8;
+}
+
+.dragGrip:active {
+  cursor: grabbing;
+}
+
+.profileNameText {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  color: #f4f4f5;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.15;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 140ms ease;
+}
+
+.profileNameText:hover {
+  color: #7cc4f5;
+}
+
+.profileNameInput {
+  width: 170px;
+  height: 22px;
+  padding: 0 6px;
+  color: #f4f4f5;
+  border-color: rgba(33, 150, 243, 0.5);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.profileDbReadout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.profileRightGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.profileDbReadout > span {
+  color: #71717a;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.profileDbReadout div {
+  min-width: 42px;
+  color: #d4d4d8;
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-align: right;
+}
+
+.profileDbReadout div span {
+  color: #71717a;
+}
+
+.profileDbReadout em {
+  margin-left: 2px;
+  color: #52525b;
+  font-style: normal;
+}
+
+.deleteProfileButton {
+  width: 16px;
+  height: 16px;
+  padding: 2px;
+  color: #52525b;
+  border-radius: 4px;
+  opacity: 0;
+  transition: color 140ms ease, background 140ms ease, opacity 140ms ease;
+}
+
+.profileRow:hover .deleteProfileButton {
+  opacity: 1;
+}
+
+.profileRow:not(.editing) .deleteProfileButton {
+  display: none;
+}
+
+.deleteProfileButton:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.profileMeterPad {
+  padding: 0 10px 8px;
+}
+
+.faderSurface {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.meterLayer,
+.audioMeter,
+.faderTrack {
+  position: absolute;
+  inset: 0;
+}
+
+.audioMeter canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.zeroLine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(83.33% - 4px);
+  width: 1px;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+}
+
+.faderTrack {
+  z-index: 3;
+  cursor: ew-resize;
+}
+
+.faderThumb {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #fafbfc 0%, #e4e7eb 50%, #b8bcc4 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 2px 5px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  transition: box-shadow 140ms ease;
+}
+
+.profileRow:hover .faderThumb {
+  box-shadow:
+    0 0 0 1px rgba(33, 150, 243, 0.6),
+    0 0 12px rgba(33, 150, 243, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.faderThumb i {
+  width: 6px;
+  height: 1px;
+  background: rgba(82, 82, 91, 0.7);
+}
+
+.dbTooltip {
+  position: absolute;
+  top: -28px;
+  z-index: 4;
+  padding: 3px 6px;
+  color: #fff;
+  border-radius: 4px;
+  background: var(--motu-blue);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.profileRow:hover .dbTooltip {
+  opacity: 1;
+}
+
+.inlineTools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 10px 10px;
+}
+
+.builder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 0;
+}
+
+.sectionHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionHeader strong {
+  color: #52525b;
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.builderControls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.builderControls input {
+  height: 27px;
+  padding: 0 9px;
+  color: #f4f4f5;
+  font-size: 12px;
+}
+
+.trackGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  max-height: 270px;
+  overflow: auto;
+}
+
+.track {
+  min-width: 0;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+}
+
+.track:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.track.selected {
+  border-color: rgba(33, 150, 243, 0.58);
+  background: rgba(15, 113, 188, 0.22);
+}
+
+.track span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track span {
+  color: #f4f4f5;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.actionBar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.actionBar button {
+  height: 26px;
+  padding: 0 12px;
+  color: #d4d4d8;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 140ms ease, background 140ms ease, transform 80ms ease;
+}
+
+.actionBar button:hover {
+  color: #f4f4f5;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.actionBar button:active {
+  transform: translateY(1px);
+}
+
+.actionBar .primaryAction {
+  padding: 0 14px;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(180deg, #2196f3 0%, #0f71bc 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.15) inset,
+    0 1px 4px rgba(15, 113, 188, 0.5);
+}
+
+.actionBar .primaryAction:hover {
+  background: linear-gradient(180deg, #2196f3 0%, #0f71bc 100%);
+}
+
+.console {
+  flex: 0 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.consoleToggle {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 37px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  transition: background 140ms ease;
+}
+
+.consoleToggle:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.consoleToggle > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  color: #71717a;
+  transform: rotate(-90deg);
+  transition: transform 200ms ease;
+}
+
+.console.expanded .chevron {
+  transform: rotate(0deg);
+}
+
+.consoleToggle strong {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.consoleToggle em {
+  color: #52525b;
+  font: 500 10px "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-style: normal;
+}
+
+.liveState {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #71717a;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.liveState::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+}
+
+.consoleBody {
+  max-height: 0;
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 255, 255, 0);
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: max-height 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease, border-color 180ms ease;
+}
+
+.console.expanded .consoleBody {
+  max-height: 160px;
+  overflow-y: auto;
+  padding: 12px 16px;
+  border-top-color: rgba(255, 255, 255, 0.04);
+  opacity: 1;
+}
+
+.consoleBody p {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 5px;
+  color: #d4d4d8;
+  font: 500 11px/1.25 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.consoleBody p:last-child {
+  margin-bottom: 0;
+}
+
+.consoleBody p span {
+  flex: 0 0 auto;
+  color: #52525b;
+  font-variant-numeric: tabular-nums;
+}
+
+.consoleBody p i {
+  width: 4px;
+  align-self: stretch;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  background: rgba(33, 150, 243, 0.6);
+}
+
+.consoleBody p em {
+  color: #d4d4d8;
+  font-style: normal;
+}
+
+@media (max-width: 360px) {
+  body {
+    min-width: 0;
+  }
+
+  .appStage {
+    padding: 0;
+  }
+
+  .menuPanel {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+}

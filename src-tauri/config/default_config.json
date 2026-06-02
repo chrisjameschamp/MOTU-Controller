@@ -1,0 +1,6 @@
+{
+  "motu_ip": "",
+  "live_meters": true,
+  "meter_refresh_hz": 60,
+  "profiles": []
+}

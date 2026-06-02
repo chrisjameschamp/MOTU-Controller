@@ -1,0 +1,32 @@
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Frontend/build output
+dist/
+build/
+
+# Tauri/Rust output
+src-tauri/target/
+src-tauri/gen/
+
+# Local reference/prototype material
+Reference/
+Prototype/
+Xcode/
+
+# Xcode/macOS local files
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Python reference leftovers
+.venv/
+__pycache__/
+*.pyc
+
+# Logs and env
+*.log
+.env
+.env.*
