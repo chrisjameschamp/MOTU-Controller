@@ -61,6 +61,8 @@ impl Serialize for AppError {
 
 type AppResult<T> = Result<T, AppError>;
 type SharedSerial = Arc<Mutex<Box<dyn SerialPort>>>;
+const MOTU_FADER_WRITE_TIMEOUT_MS: u64 = 1_500;
+const MOTU_FADER_WRITE_RETRIES: usize = 2;
 
 #[derive(Default)]
 struct AppState {
@@ -1151,20 +1153,80 @@ fn stop_motu_meter_stream(state: State<AppState>) -> AppResult<()> {
     Ok(())
 }
 
-#[tauri::command]
-async fn set_channel_fader(motu_ip: String, channel: u16, gain: f32) -> AppResult<()> {
+fn motu_request_error(action: &str, url: &str, error: reqwest::Error) -> AppError {
+    let reason = if error.is_timeout() {
+        "timed out"
+    } else if error.is_connect() {
+        "could not connect"
+    } else if error.is_status() {
+        "returned an HTTP error"
+    } else if error.is_request() {
+        "could not send request"
+    } else if error.is_decode() {
+        "returned unreadable data"
+    } else {
+        "failed"
+    };
+
+    AppError::Message(format!("{action} {reason} for {url}: {error}"))
+}
+
+async fn set_channel_fader_with_client(
+    client: &Client,
+    motu_ip: &str,
+    channel: u16,
+    gain: f32,
+) -> AppResult<()> {
     let url = format!("{motu_ip}/datastore/mix/chan/{channel}/matrix/fader");
     let mut form = HashMap::new();
     form.insert("json", json!({ "value": gain }).to_string());
 
-    Client::new()
-        .patch(url)
+    client
+        .patch(&url)
         .form(&form)
         .send()
-        .await?
-        .error_for_status()?;
+        .await
+        .map_err(|error| motu_request_error("MOTU fader update", &url, error))?
+        .error_for_status()
+        .map_err(|error| motu_request_error("MOTU fader update", &url, error))?;
 
     Ok(())
+}
+
+#[tauri::command]
+async fn set_channel_fader(motu_ip: String, channel: u16, gain: f32) -> AppResult<()> {
+    let client = Client::builder()
+        .timeout(Duration::from_millis(MOTU_FADER_WRITE_TIMEOUT_MS))
+        .build()?;
+
+    set_channel_fader_with_retry(&client, &motu_ip, channel, gain).await
+}
+
+async fn set_channel_fader_with_retry(
+    client: &Client,
+    motu_ip: &str,
+    channel: u16,
+    gain: f32,
+) -> AppResult<()> {
+    let mut last_error = None;
+
+    for attempt in 0..=MOTU_FADER_WRITE_RETRIES {
+        match set_channel_fader_with_client(client, motu_ip, channel, gain).await {
+            Ok(()) => return Ok(()),
+            Err(error) => {
+                last_error = Some(error);
+                if attempt < MOTU_FADER_WRITE_RETRIES {
+                    tokio::time::sleep(Duration::from_millis(80)).await;
+                }
+            }
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| {
+        AppError::Message(format!(
+            "MOTU fader update failed for {motu_ip}/datastore/mix/chan/{channel}/matrix/fader"
+        ))
+    }))
 }
 
 #[tauri::command]
@@ -1174,9 +1236,12 @@ async fn set_channels_from_knob(
     knob_position: i16,
 ) -> AppResult<f32> {
     let gain = knob_position_to_gain(knob_position);
+    let client = Client::builder()
+        .timeout(Duration::from_millis(MOTU_FADER_WRITE_TIMEOUT_MS))
+        .build()?;
 
     for channel in channels {
-        set_channel_fader(motu_ip.clone(), channel, gain).await?;
+        set_channel_fader_with_retry(&client, &motu_ip, channel, gain).await?;
     }
 
     Ok(gain)
