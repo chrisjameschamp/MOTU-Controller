@@ -36,6 +36,7 @@ const state: {
   startOnLogin: boolean;
   consoleExpanded: boolean;
   savedConfigSnapshot: string;
+  savedProfileSyncSnapshot: string;
   log: string[];
 } = {
   config: null,
@@ -68,6 +69,7 @@ const state: {
   startOnLogin: false,
   consoleExpanded: false,
   savedConfigSnapshot: "",
+  savedProfileSyncSnapshot: "",
   log: []
 };
 
@@ -192,8 +194,17 @@ function dbFromPercent(percent: number) {
 
 function configSnapshot(config: AppConfig | null) {
   if (!config) return "";
+  return JSON.stringify(config);
+}
+
+function profileSyncSnapshot(config: AppConfig | null) {
+  if (!config) return "";
   return JSON.stringify({
-    profiles: config.profiles
+    profiles: config.profiles.map((profile) => ({
+      name: profile.name,
+      desc: profile.desc,
+      channel: profile.channel
+    }))
   });
 }
 
@@ -209,10 +220,16 @@ function meterRefreshHz() {
 
 function markConfigClean() {
   state.savedConfigSnapshot = configSnapshot(state.config);
+  state.savedProfileSyncSnapshot = profileSyncSnapshot(state.config);
 }
 
 function hasUnsavedChanges() {
-  return Boolean(state.config) && configSnapshot(state.config) !== state.savedConfigSnapshot;
+  return Boolean(state.config) && profileSyncSnapshot(state.config) !== state.savedProfileSyncSnapshot;
+}
+
+function markConfigCleanIfOnlyLevelsChanged() {
+  if (!state.config || hasUnsavedChanges()) return;
+  state.savedConfigSnapshot = configSnapshot(state.config);
 }
 
 function normalizeMotuIp(value: string) {
@@ -1204,6 +1221,7 @@ async function applyKnobPosition(position: number) {
     profile.level = await invoke<number>("knob_position_to_percent", { position });
     updatedProfile = profile;
     void saveLocalConfig();
+    markConfigCleanIfOnlyLevelsChanged();
     appendLog(`Knob ${position} -> ${profile.name} gain ${gain.toFixed(3)}`);
   } catch (error) {
     appendLog(`MOTU update failed: ${String(error)}`);
@@ -1249,6 +1267,7 @@ async function refreshAllProfileLevelsFromMotu() {
 
   state.motuLevelsLoaded = true;
   void saveLocalConfig();
+  markConfigCleanIfOnlyLevelsChanged();
   render();
 }
 
@@ -1366,6 +1385,7 @@ async function commitProfileFader(profileName: string) {
 
     appendLog(`Set ${profile.name} to ${profileDbLabel(profile)} dB`);
     void saveLocalConfig();
+    markConfigCleanIfOnlyLevelsChanged();
   } catch (error) {
     appendLog(`${profile.name}: fader update failed: ${String(error)}`);
   }
