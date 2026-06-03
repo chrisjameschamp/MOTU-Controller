@@ -30,6 +30,7 @@ __pycache__/
 *.log
 .env
 .env.*
+.local/
 
 # Local helper scripts and private release notes
 scripts/
