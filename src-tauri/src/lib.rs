@@ -608,8 +608,13 @@ fn connect_nano(path: String, app: tauri::AppHandle, state: State<AppState>) -> 
 
     let port = serialport::new(&path, BAUD_RATE)
         .timeout(Duration::from_millis(100))
-        .open()?;
-    let reader_port = port.try_clone()?;
+        .open()
+        .map_err(|error| {
+            AppError::Message(format!("Could not open Nano serial port {path}: {error}"))
+        })?;
+    let reader_port = port.try_clone().map_err(|error| {
+        AppError::Message(format!("Could not clone Nano serial port {path}: {error}"))
+    })?;
     let shared = Arc::new(Mutex::new(port));
     let stop_reader = Arc::new(AtomicBool::new(false));
 

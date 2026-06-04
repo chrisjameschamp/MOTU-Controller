@@ -85,6 +85,8 @@ let lastMenuResizeHeight = 0;
 let nanoHeartbeatTimer = 0;
 let nanoHeartbeatResponseTimer = 0;
 let nanoReconnectInFlight = false;
+let motuLevelSyncTimer = 0;
+let motuLevelSyncInFlight = false;
 let profileDrag:
   | {
       name: string;
@@ -121,6 +123,7 @@ const NANO_HEARTBEAT_INTERVAL_MS = 60 * 1000;
 const NANO_SILENCE_BEFORE_PING_MS = 30 * 60 * 1000;
 const NANO_HEARTBEAT_RESPONSE_MS = 7000;
 const NANO_HEARTBEAT_MAX_MISSES = 2;
+const MOTU_LEVEL_SYNC_INTERVAL_MS = 60 * 1000;
 
 function appendLog(line: string) {
   const timestamp = new Date().toLocaleTimeString();
@@ -557,6 +560,38 @@ async function syncMotuMeterStream() {
   }
 }
 
+function stopMotuLevelSync() {
+  if (motuLevelSyncTimer) {
+    window.clearInterval(motuLevelSyncTimer);
+    motuLevelSyncTimer = 0;
+  }
+}
+
+function startMotuLevelSync() {
+  stopMotuLevelSync();
+  if (!isTauriRuntime() || !state.motuConnectedIp) return;
+
+  motuLevelSyncTimer = window.setInterval(() => {
+    void syncMotuLevelsFromExternalChanges();
+  }, MOTU_LEVEL_SYNC_INTERVAL_MS);
+}
+
+async function syncMotuLevelsFromExternalChanges() {
+  if (!state.config || !state.motuConnectedIp || motuLevelSyncInFlight || state.isApplyingKnob) return;
+  motuLevelSyncInFlight = true;
+
+  try {
+    const activeChanged = await refreshAllProfileLevelsFromMotu({ quiet: true });
+    if (activeChanged && state.connection === "connected" && state.currentProfile) {
+      await syncActiveProfileLevelToDevice("MOTU level refresh");
+    }
+  } catch (error) {
+    appendLog(`MOTU level refresh failed: ${String(error)}`);
+  } finally {
+    motuLevelSyncInFlight = false;
+  }
+}
+
 async function connectMotu() {
   if (!state.config) return;
   const motuIp = committedMotuIp();
@@ -575,6 +610,7 @@ async function connectMotu() {
     await refreshAllProfileLevelsFromMotu();
     state.motuConnectedIp = motuIp;
     await syncMotuMeterStream();
+    startMotuLevelSync();
     appendLog(`MOTU connected at ${motuIp}`);
     render();
   } catch (error) {
@@ -586,6 +622,7 @@ async function connectMotu() {
 }
 
 async function disconnectMotu() {
+  stopMotuLevelSync();
   await stopMotuMeterStream();
 
   state.motuConnectedIp = "";
@@ -669,11 +706,14 @@ function setMeterRefreshHz(value: number) {
 
 async function refreshPorts() {
   state.ports = await invoke<SerialPortInfo[]>("list_serial_ports");
+  const selectedStillExists = state.ports.some((port) => port.path === state.selectedPort);
   const nano = state.ports.find((port) => {
     const haystack = `${port.path} ${port.name ?? ""}`.toLowerCase();
     return haystack.includes("nano") || haystack.includes("usbmodem");
   });
-  state.selectedPort = state.selectedPort || nano?.path || state.ports[0]?.path || "";
+  if (!selectedStillExists) {
+    state.selectedPort = nano?.path || state.ports[0]?.path || "";
+  }
   render();
 }
 
@@ -786,6 +826,8 @@ async function connectSelectedPort() {
   render();
 
   try {
+    await refreshPorts();
+    if (!state.selectedPort) throw new Error("No serial port selected");
     await invoke("connect_nano", { path: state.selectedPort });
     state.connection = "connected";
     markNanoSeen();
@@ -1182,7 +1224,7 @@ async function selectProfile(name: string) {
   state.currentProfile = name;
   state.lastKnobPosition = null;
   appendLog(`Selected ${name}`);
-  await syncActiveProfileLevelToDevice("profile selected in app");
+  await syncActiveProfileLevelToDevice("profile selected in app", { refreshFromMotu: true });
 }
 
 async function applyKnobPosition(position: number) {
@@ -1253,15 +1295,16 @@ async function readProfileLevelFromMotu(profile: Profile, quiet = false) {
   if (!quiet) appendLog(`${profile.name}: MOTU ch ${firstChannel} ${value.toFixed(3)} -> ${profile.level}%`);
 }
 
-async function refreshAllProfileLevelsFromMotu() {
+async function refreshAllProfileLevelsFromMotu(options: { quiet?: boolean } = {}) {
   if (!state.config) return;
 
-  appendLog("Reading MOTU levels...");
+  const activeBefore = activeProfile()?.level ?? null;
+  if (!options.quiet) appendLog("Reading MOTU levels...");
   for (const profile of state.config.profiles) {
     try {
-      await readProfileLevelFromMotu(profile);
+      await readProfileLevelFromMotu(profile, options.quiet);
     } catch (error) {
-      appendLog(`${profile.name}: MOTU read failed: ${String(error)}`);
+      if (!options.quiet) appendLog(`${profile.name}: MOTU read failed: ${String(error)}`);
     }
   }
 
@@ -1269,6 +1312,7 @@ async function refreshAllProfileLevelsFromMotu() {
   void saveLocalConfig();
   markConfigCleanIfOnlyLevelsChanged();
   render();
+  return activeBefore !== null && activeProfile()?.level !== activeBefore;
 }
 
 async function syncActiveProfileLevelToDevice(reason: string, options: { refreshFromMotu?: boolean } = {}) {
@@ -1283,6 +1327,8 @@ async function syncActiveProfileLevelToDevice(reason: string, options: { refresh
   if (options.refreshFromMotu) {
     try {
       await readProfileLevelFromMotu(profile, true);
+      void saveLocalConfig();
+      markConfigCleanIfOnlyLevelsChanged();
     } catch (error) {
       appendLog(`${profile.name}: using cached level after MOTU read failed: ${String(error)}`);
     }
@@ -2030,7 +2076,7 @@ async function boot() {
       state.lastKnobPosition = null;
       state.expectedDeviceKnobPosition = null;
       if (changed) {
-        void syncActiveProfileLevelToDevice("Nano profile changed");
+        void syncActiveProfileLevelToDevice("Nano profile changed", { refreshFromMotu: true });
       }
     }
 
@@ -2049,6 +2095,7 @@ async function boot() {
     await refreshPorts();
     if (state.config?.motu_ip) {
       state.motuConnectedIp = normalizeMotuIp(state.config.motu_ip);
+      startMotuLevelSync();
     }
   });
 

@@ -1,6 +1,6 @@
 [package]
 name = "motu-controller"
-version = "0.1.4"
+version = "0.1.5"
 description = "Nano-D++ controller for MOTU 828es"
 authors = ["Chris Champeau"]
 license = "MIT"
