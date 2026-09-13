@@ -85,6 +85,9 @@ let lastMenuResizeHeight = 0;
 let nanoHeartbeatTimer = 0;
 let nanoHeartbeatResponseTimer = 0;
 let nanoReconnectInFlight = false;
+let nanoReconnectTimer = 0;
+let nanoAutoReconnectEnabled = true;
+let preferredNanoIdentity: Pick<SerialPortInfo, "name" | "serial_number" | "vendor_id" | "product_id"> | null = null;
 let motuLevelSyncTimer = 0;
 let motuLevelSyncInFlight = false;
 let profileDrag:
@@ -123,6 +126,7 @@ const NANO_HEARTBEAT_INTERVAL_MS = 60 * 1000;
 const NANO_SILENCE_BEFORE_PING_MS = 30 * 60 * 1000;
 const NANO_HEARTBEAT_RESPONSE_MS = 7000;
 const NANO_HEARTBEAT_MAX_MISSES = 2;
+const NANO_RECONNECT_INTERVAL_MS = 30 * 1000;
 const MOTU_LEVEL_SYNC_INTERVAL_MS = 60 * 1000;
 
 function appendLog(line: string) {
@@ -704,15 +708,87 @@ function setMeterRefreshHz(value: number) {
   void syncMotuMeterStream().then(render);
 }
 
-async function refreshPorts() {
-  state.ports = await invoke<SerialPortInfo[]>("list_serial_ports");
+function serialEndpointKey(path: string) {
+  return path.replace("/dev/tty.", "/dev/cu.");
+}
+
+function preferMacCalloutPorts(ports: SerialPortInfo[]) {
+  const calloutPaths = new Set(ports.filter((port) => port.path.startsWith("/dev/cu.")).map((port) => port.path));
+  return ports.filter((port) => !port.path.startsWith("/dev/tty.") || !calloutPaths.has(serialEndpointKey(port.path)));
+}
+
+function nanoPortScore(port: SerialPortInfo) {
+  const haystack = `${port.name ?? ""} ${port.path}`.toLowerCase();
+  let score = 0;
+
+  if (haystack.includes("nano-d++")) score += 500;
+  else if (haystack.includes("nano")) score += 400;
+  if (haystack.includes("usbmodem")) score += 200;
+  if (port.path.startsWith("/dev/cu.")) score += 50;
+
+  if (preferredNanoIdentity) {
+    if (preferredNanoIdentity.serial_number && port.serial_number === preferredNanoIdentity.serial_number) score += 2000;
+    if (
+      preferredNanoIdentity.vendor_id &&
+      preferredNanoIdentity.product_id &&
+      port.vendor_id === preferredNanoIdentity.vendor_id &&
+      port.product_id === preferredNanoIdentity.product_id
+    ) {
+      score += 1000;
+    }
+    if (preferredNanoIdentity.name && port.name === preferredNanoIdentity.name) score += 500;
+  }
+
+  return score;
+}
+
+function matchesPreferredNanoIdentity(port: SerialPortInfo) {
+  if (!preferredNanoIdentity) return false;
+  if (preferredNanoIdentity.serial_number && port.serial_number === preferredNanoIdentity.serial_number) return true;
+  if (
+    preferredNanoIdentity.vendor_id &&
+    preferredNanoIdentity.product_id &&
+    port.vendor_id === preferredNanoIdentity.vendor_id &&
+    port.product_id === preferredNanoIdentity.product_id
+  ) {
+    return true;
+  }
+  return Boolean(preferredNanoIdentity.name && port.name === preferredNanoIdentity.name);
+}
+
+function looksLikeNanoPort(port: SerialPortInfo) {
+  const haystack = `${port.name ?? ""} ${port.path}`.toLowerCase();
+  return haystack.includes("nano") || haystack.includes("usbmodem") || matchesPreferredNanoIdentity(port);
+}
+
+function bestNanoPort(ports: SerialPortInfo[], requirePreferredIdentity = false) {
+  return ports
+    .map((port) => ({ port, score: nanoPortScore(port) }))
+    .filter((candidate) => candidate.score >= 200 && (!requirePreferredIdentity || matchesPreferredNanoIdentity(candidate.port)))
+    .sort((left, right) => right.score - left.score || left.port.path.localeCompare(right.port.path))[0]?.port;
+}
+
+function rememberNanoIdentity(path: string) {
+  const port = state.ports.find((candidate) => candidate.path === path);
+  if (!port) return;
+  preferredNanoIdentity = {
+    name: port.name,
+    serial_number: port.serial_number,
+    vendor_id: port.vendor_id,
+    product_id: port.product_id
+  };
+}
+
+async function refreshPorts(options: { rediscoverNano?: boolean; requirePreferredIdentity?: boolean } = {}) {
+  const availablePorts = await invoke<SerialPortInfo[]>("list_serial_ports");
+  state.ports = preferMacCalloutPorts(availablePorts).filter(looksLikeNanoPort);
   const selectedStillExists = state.ports.some((port) => port.path === state.selectedPort);
-  const nano = state.ports.find((port) => {
-    const haystack = `${port.path} ${port.name ?? ""}`.toLowerCase();
-    return haystack.includes("nano") || haystack.includes("usbmodem");
-  });
-  if (!selectedStillExists) {
-    state.selectedPort = nano?.path || state.ports[0]?.path || "";
+
+  if (options.rediscoverNano || !selectedStillExists) {
+    state.selectedPort = bestNanoPort(
+      state.ports,
+      Boolean(options.requirePreferredIdentity && preferredNanoIdentity)
+    )?.path ?? "";
   }
   render();
 }
@@ -739,8 +815,25 @@ function stopNanoHeartbeat() {
   }
 }
 
+function stopNanoReconnectPolling() {
+  if (nanoReconnectTimer) {
+    window.clearInterval(nanoReconnectTimer);
+    nanoReconnectTimer = 0;
+  }
+}
+
+function startNanoReconnectPolling() {
+  if (!nanoAutoReconnectEnabled || nanoReconnectTimer || state.connection !== "disconnected") return;
+  appendLog("Nano recovery scan scheduled every 30 seconds");
+  nanoReconnectTimer = window.setInterval(() => {
+    if (state.connection === "disconnected" && !nanoReconnectInFlight) {
+      void reconnectNano("automatic recovery scan");
+    }
+  }, NANO_RECONNECT_INTERVAL_MS);
+}
+
 async function reconnectNano(reason: string) {
-  if (nanoReconnectInFlight || !state.selectedPort) return;
+  if (nanoReconnectInFlight || !nanoAutoReconnectEnabled) return;
   nanoReconnectInFlight = true;
   stopNanoHeartbeat();
   appendLog(`Nano reconnecting: ${reason}`);
@@ -754,20 +847,31 @@ async function reconnectNano(reason: string) {
   }
 
   try {
-    await refreshPorts();
+    state.selectedPort = "";
+    await refreshPorts({ rediscoverNano: true, requirePreferredIdentity: true });
+    if (!state.selectedPort) throw new Error("Nano-D++ was not found in the current serial device list");
     await invoke("connect_nano", { path: state.selectedPort });
     state.connection = "connected";
+    rememberNanoIdentity(state.selectedPort);
+    stopNanoReconnectPolling();
     markNanoSeen();
     appendLog(`Nano reconnected to ${state.selectedPort}`);
     await requestDeviceProfileState();
     startNanoHeartbeat();
   } catch (error) {
+    try {
+      await invoke("disconnect_nano");
+    } catch {
+      // The failed connection may not have left an open serial port.
+    }
     state.connection = "disconnected";
     state.currentProfile = "";
     state.lastKnobPosition = null;
     state.expectedDeviceKnobPosition = null;
     state.nanoHeartbeatMisses = 0;
+    state.selectedPort = "";
     appendLog(`Nano reconnect failed: ${String(error)}`);
+    startNanoReconnectPolling();
   } finally {
     nanoReconnectInFlight = false;
     render();
@@ -817,11 +921,7 @@ function startNanoHeartbeat() {
 }
 
 async function connectSelectedPort() {
-  if (!state.selectedPort) {
-    appendLog("No serial port selected");
-    return;
-  }
-
+  nanoAutoReconnectEnabled = true;
   state.connection = "connecting";
   render();
 
@@ -830,20 +930,30 @@ async function connectSelectedPort() {
     if (!state.selectedPort) throw new Error("No serial port selected");
     await invoke("connect_nano", { path: state.selectedPort });
     state.connection = "connected";
+    rememberNanoIdentity(state.selectedPort);
+    stopNanoReconnectPolling();
     markNanoSeen();
     appendLog(`Connected to ${state.selectedPort}`);
     await requestDeviceProfileState();
     startNanoHeartbeat();
   } catch (error) {
+    try {
+      await invoke("disconnect_nano");
+    } catch {
+      // The failed connection may not have left an open serial port.
+    }
     state.connection = "disconnected";
     stopNanoHeartbeat();
     appendLog(`Connect failed: ${String(error)}`);
+    startNanoReconnectPolling();
   }
 
   render();
 }
 
 async function disconnect() {
+  nanoAutoReconnectEnabled = false;
+  stopNanoReconnectPolling();
   stopNanoHeartbeat();
   await invoke("disconnect_nano");
   state.connection = "disconnected";
@@ -2057,6 +2167,7 @@ async function boot() {
 
   await listen<string>("nano://disconnected", (event) => {
     if (state.connection === "connected") {
+      nanoAutoReconnectEnabled = true;
       void reconnectNano(`serial reader stopped: ${event.payload}`);
     }
   });
@@ -2101,6 +2212,8 @@ async function boot() {
 
   if (state.selectedPort) {
     await connectSelectedPort();
+  } else {
+    startNanoReconnectPolling();
   }
 
   render();
